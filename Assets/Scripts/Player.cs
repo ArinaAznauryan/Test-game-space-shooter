@@ -42,9 +42,41 @@ public class Player : MonoBehaviour {
     public float floatSpeed = 1f;
     public float floatHeight = 1f;
 
+    public int _fireDamage = 1;
+
     private GameplayUi _gameplayUI;
     private GameOverUi _gameOverUI;
 
+    private bool vulnerable = true;
+
+    protected virtual void OnEnable()
+    {
+        ResetDamage();
+        UpdateHealth(3);
+        CheckForPowerUps();
+    }
+
+    protected virtual void OnDisable()
+    {
+        Invoke(nameof(AdjustForPowerUps), 0.01f);
+        
+    }
+
+    public void MakeVulnerable(bool yesOrNo)
+    {
+        vulnerable = yesOrNo;
+    }
+
+    protected void CheckForPowerUps()
+    {
+        FindObjectOfType<ProtectiveField>()?.AdjustToPlayer();
+    }
+
+    protected void AdjustForPowerUps()
+    {
+        ProtectiveField protectiveField = FindObjectOfType<ProtectiveField>(true);
+        if (protectiveField.transform.parent == transform) protectiveField.transform.parent = null;
+    }
 
     private void Awake() {
         _body = GetComponent<Rigidbody>();
@@ -54,7 +86,6 @@ public class Player : MonoBehaviour {
     }
 
     void Start() {
-        _gameplayUI.UpdateHealth(_health);
         _gameOverUI.Close();
     }
 
@@ -87,7 +118,23 @@ public class Player : MonoBehaviour {
         var go = GameController.Instance.pool.PlayerProjectile.Spawn();
        
         go.transform.position = _projectileSpawnLocation.position;
+
+        go.GetComponent<Projectile>().Init(_fireDamage, 5);
     }
+
+
+    public void SetFireDamage(int damage)
+    {
+        _fireDamage = damage;
+    }
+
+    public void Reset()
+    {
+        FindObjectOfType<ProtectiveField>(true).transform.parent = null;
+        ResetDamage();
+        UpdateHealth(3);
+    }
+    public void ResetDamage() { _fireDamage = 1; }
 
     protected virtual void Update() {
 
@@ -96,10 +143,17 @@ public class Player : MonoBehaviour {
     }
 
     public void Hit() {
-        _health--;
-        _gameplayUI.UpdateHealth(_health);
+        if (!vulnerable) return;
+
+        UpdateHealth(_health-1);
 
         if (_health <= 0) Die();
+    }
+
+    protected void UpdateHealth(int health)
+    {
+        _health = health;
+        _gameplayUI.UpdateHealth(_health);
     }
 
     private void Die() {
@@ -160,6 +214,11 @@ public class Player : MonoBehaviour {
         gameObject.SetActive(false);
     }
 
+    void ActivateProtectiveField()
+    {
+        FindObjectOfType<ProtectiveField>(true).gameObject.SetActive(true);
+    }
+
     void SwitchState(PowerUp.PowerUpType newState)
     {
        // state = newState;
@@ -175,6 +234,10 @@ public class Player : MonoBehaviour {
             case PowerUp.PowerUpType.FIRE_RATE:
                 _fireInterval *= 0.9f;
                 break;
+            case PowerUp.PowerUpType.PROTECTIVE_FIELD:
+                ActivateProtectiveField();
+                break;
+            default: break;
         }
     }
 

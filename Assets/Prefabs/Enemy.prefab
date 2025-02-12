@@ -47,7 +47,7 @@ GameObject:
   - component: {fileID: 2964314488318170617}
   m_Layer: 7
   m_Name: Enemy
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -147,9 +147,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a864b70f30bd3524b80631c61f3ea382, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  zigzagFrequency: 4
-  AMPLITUDE: 0.1
-  adjustedAmplitude: 0
 --- !u!1001 &6292652592530565719
 PrefabInstance:
   m_ObjectHideFlags: 0

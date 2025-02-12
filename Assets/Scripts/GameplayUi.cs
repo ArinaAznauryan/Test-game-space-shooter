@@ -8,13 +8,13 @@ public class GameplayUi : MonoBehaviour {
 
     [SerializeField] private TMP_Text _labelScore;
     [SerializeField] private RectTransform _health;
+    [SerializeField] private RectTransform[] _additHealth;
 
     private int _score = 0;
 
     private void Awake() {
-        _labelScore.text = "0";
+        AddScore(0);
         UpdateHealth(0);
-
     }
 
     public void AddScore(int s) {
@@ -24,7 +24,7 @@ public class GameplayUi : MonoBehaviour {
 
     public void UpdateHealth(int h) {
         for (int i = 0; i < _health.childCount; i++) {
-            _health.GetChild(i).gameObject.SetActive((i + 1) <= h);
+            _health.GetChild(i).gameObject.SetActive(i < h);
         }
     }
 }

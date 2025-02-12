@@ -6,6 +6,7 @@ TagManager:
   tags:
   - PlayerTripleRocket
   - MainPlayer
+  - Enemy
   layers:
   - Default
   - TransparentFX

@@ -9,8 +9,10 @@ public class PlayerTripleRocket : Player
     [SerializeField] private float timerDuration = 10f; // Set the timer duration in seconds
     private float timer = 0f; // Tracks the time passed
 
-    private void OnEnable()
+    protected override void OnEnable()
     {
+        base.OnEnable();
+        UpdateHealth(10);
         timer = 0f; // Reset the timer every time the object is enabled
     }
 

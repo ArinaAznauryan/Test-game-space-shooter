@@ -6,18 +6,27 @@ using Random = UnityEngine.Random;
 
 struct RandomSelection
 {
-    private int minValue;
-    private int maxValue;
+    private float minValue,  maxValue;
     public float probability;
 
     public RandomSelection(int minValue, int maxValue, float probability)
+    {
+        this.minValue = (float)minValue;
+        this.maxValue = (float)maxValue;
+        this.probability = probability;
+        this.probability = probability;
+    }
+
+    public RandomSelection(float minValue, float maxValue, float probability)
     {
         this.minValue = minValue;
         this.maxValue = maxValue;
         this.probability = probability;
     }
 
-    public int GetValue() { return Random.Range(minValue, maxValue + 1); }
+    public int GetValueInt() { return Random.Range((int)minValue, (int)maxValue + 1); }
+    public float GetValueFloat() { return Random.Range(minValue, maxValue + 1f); }
+
 }
 
 
@@ -103,22 +112,29 @@ public class Enemy : MonoBehaviour {
 
         if (_health <= 0) {
 
-            var fx = GameController.Instance.pool.EnemyProjectile.Spawn();
-            fx.transform.position = transform.position;
+            //var fx = GameController.Instance.pool.EnemyProjectile.Spawn();
+            //fx.transform.position = transform.position;
 
             if (Random.value < _powerUpSpawnChance) SpawnPowerUp();
 
-            _gameplayUI.AddScore(1);
-
-            GameController.Instance.pool.EnemyProjectile.Despawn(fx);
-            GameController.Instance.pool.Enemy.Despawn(gameObject);
+            Die();
 
         }
+    }
+
+    public void Die(/*GameObject fx*/)
+    {
+        _gameplayUI.AddScore(1);
+
+        Instantiate(_prefabExplosion, transform.position, Quaternion.identity);
+        //GameController.Instance.pool.EnemyProjectile.Despawn(fx);
+        GameController.Instance.pool.Enemy.Despawn(gameObject);
     }
 
     private void SpawnPowerUp()
     {
         var powerUp = Instantiate(_prefabPowerUp);
+        powerUp.transform.position = new Vector3(Random.Range(-4f, 4f), 14f, 0.0f);
 
         var randomType = (PowerUp.PowerUpType)Random.Range(0, Enum.GetValues(typeof(PowerUp.PowerUpType)).Length);
         powerUp.SetType(randomType);

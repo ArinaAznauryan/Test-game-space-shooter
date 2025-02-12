@@ -14,8 +14,13 @@ public class EnemyMovement : MonoBehaviour
     public void OnEnable()
     {
         body = GetComponent<Rigidbody>();
-        _speed = Random.Range(2.0f, 6.0f);
-        int random = GetRandomValue(
+        _speed = GetRandomValueFloat(
+            new RandomSelection(2.0f, 5.0f, .7f),
+            new RandomSelection(6.0f, 8.0f, .3f)
+        ); 
+        //Random.Range(2.0f, 6.0f);
+
+        int random = GetRandomValueInt(
             new RandomSelection(0, 0, .7f),
             new RandomSelection(1, 1, .3f)
         );
@@ -28,14 +33,29 @@ public class EnemyMovement : MonoBehaviour
         return _speed;
     }
 
-    int GetRandomValue(params RandomSelection[] selections)
+    int GetRandomValueInt(params RandomSelection[] selections)
     {
         float rand = Random.value;
         float currentProb = 0;
         foreach (var selection in selections)
         {
             currentProb += selection.probability;
-            if (rand <= currentProb) return selection.GetValue();
+            if (rand <= currentProb) return selection.GetValueInt();
+        }
+
+        //will happen if the input's probabilities sums to less than 1
+        //throw error here if that's appropriate
+        return -1;
+    }
+
+    float GetRandomValueFloat(params RandomSelection[] selections)
+    {
+        float rand = Random.value;
+        float currentProb = 0;
+        foreach (var selection in selections)
+        {
+            currentProb += selection.probability;
+            if (rand <= currentProb) return selection.GetValueFloat();
         }
 
         //will happen if the input's probabilities sums to less than 1

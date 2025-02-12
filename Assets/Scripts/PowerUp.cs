@@ -5,38 +5,43 @@ using UnityEngine;
 
 public class PowerUp : MonoBehaviour {
     private float _speed = 3.0f;
-    private GameObject visual;
     [SerializeField] private GameObject[] allVisuals;
 
     public enum PowerUpType {
         FIRE_RATE = 0,
-        TRIPLE_ROCKET = 1
+        TRIPLE_ROCKET = 1,
+        PROTECTIVE_FIELD = 2
     }
 
     [SerializeField] private PowerUpType _type;
-
-    void OnEnable()
-    {
-        visual = transform.GetChild(0).gameObject;
-        SetVisual();
-    }
         
     private void SetVisual()
     {
-        switch (_type)
+        int i = (int)_type; // Convert enum to int to get the index
+        if (i >= 0 && i < allVisuals.Length)
         {
-            case PowerUpType.FIRE_RATE:
-                visual = allVisuals[0];
-                break;
-            case PowerUpType.TRIPLE_ROCKET:
-                visual = allVisuals[1];
-                break;
-            default: break;
+            allVisuals[i].SetActive(true);
         }
+        //switch (_type)
+        //{
+        //    case PowerUpType.FIRE_RATE:
+        //        allVisuals[0].SetActive(true);
+        //        break;
+
+        //    case PowerUpType.TRIPLE_ROCKET:
+        //        allVisuals[1].SetActive(true);
+        //        break;
+        //    case PowerUpType.PROTECTIVE_FIELD:
+        //        allVisuals[2].SetActive(true);
+        //        break;
+        //    default: break;
+        //}
     }
+
 
     public void SetType(PowerUpType type) {
         _type = type;
+        SetVisual();
     }
 
     private void Update() {

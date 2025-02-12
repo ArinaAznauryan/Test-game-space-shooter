@@ -69,6 +69,7 @@ public class GameController : MonoBehaviour {
 
 
         _running = true;
+        
         _nextSpawnTime = Time.time + _enemySpawnInterval;
     }
 
@@ -79,7 +80,9 @@ public class GameController : MonoBehaviour {
         if (Time.time >= _nextSpawnTime)
         {
             SpawnEnemy();
+
             _nextSpawnTime = Time.time + _enemySpawnInterval;
+            _enemySpawnInterval = Random.Range(.2f, 1);
         }
     }
 
