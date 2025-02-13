@@ -11,7 +11,7 @@ public class EnemyProjectileObjectPool : ObjectPool
             if (obj.activeSelf && obj.transform.position.y < screenBottom)
             {
                 ResetObjectPosition(obj);
-                obj.SetActive(false); // Disactivate the object
+                obj.SetActive(false);
             }
         }
     }

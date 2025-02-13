@@ -9,12 +9,18 @@ public class GameplayUi : MonoBehaviour {
     [SerializeField] private TMP_Text _labelScore;
     [SerializeField] private RectTransform _health;
     [SerializeField] private RectTransform[] _additHealth;
+    [SerializeField] private GameObject countdown;
 
     private int _score = 0;
 
     private void Awake() {
         AddScore(0);
-        UpdateHealth(0);
+        UpdateHealth(3);
+    }
+
+    public GameObject GetCountdown()
+    {
+        return countdown;
     }
 
     public void AddScore(int s) {

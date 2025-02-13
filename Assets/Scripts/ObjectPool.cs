@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class ObjectPool : MonoBehaviour
 {
-    public GameObject objectPrefab;
-    public int poolSize;
+    public GameObject objectPrefab; //Prefab of the target object
+    public int poolSize; //Put it to a little bit more than the maximum amount of that object, that can appear in the screen
     public float screenTop;
     public float screenBottom;
     public Vector3 spawnPoint;
@@ -24,13 +24,13 @@ public class ObjectPool : MonoBehaviour
                 return obj;
             }
         }
-        Debug.LogError("Couldn't find the object getting pooled!");
+        Debug.LogError("There are more objects trying to spawn than available ones! Increase the pool size!");
         return null;
     }
 
     public void Despawn(GameObject tarObj)
     {
-        ResetObjectPosition(tarObj);
+        ResetObjectPosition(tarObj); //Putting the object outside the screen to its default position
         tarObj.SetActive(false);
     }
 
@@ -47,6 +47,7 @@ public class ObjectPool : MonoBehaviour
 
     private void LateUpdate()
     {
+        //This function has to be overriden from the extended classes, so that the pooled objects despawn when getting outside the screen
         ResetMechanic();
     }
 
@@ -56,6 +57,6 @@ public class ObjectPool : MonoBehaviour
 
     protected void ResetObjectPosition(GameObject obj)
     {
-        obj.transform.position = spawnPoint; // Set position in world space
+        obj.transform.position = spawnPoint;
     }
 }

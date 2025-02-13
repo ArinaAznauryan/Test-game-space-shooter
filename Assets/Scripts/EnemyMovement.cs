@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static MyTools.Tools;
 
 public class EnemyMovement : MonoBehaviour
 {
@@ -8,7 +9,7 @@ public class EnemyMovement : MonoBehaviour
     private Rigidbody body;
     private float _speed = 2.0f;
     private float zigzagFrequency = 5f;
-    private float AMPLITUDE = .1f;
+    private float AMPLITUDE = .1f; //Amplitudeo of zigzag movement
 
 
     public void OnEnable()
@@ -18,8 +19,8 @@ public class EnemyMovement : MonoBehaviour
             new RandomSelection(2.0f, 5.0f, .7f),
             new RandomSelection(6.0f, 8.0f, .3f)
         ); 
-        //Random.Range(2.0f, 6.0f);
 
+        //Chooses a random enemy movement with probabilty of "STRAIGHT" being 70 percent, and "ZIGZAG" being 30 percent
         int random = GetRandomValueInt(
             new RandomSelection(0, 0, .7f),
             new RandomSelection(1, 1, .3f)
@@ -31,36 +32,6 @@ public class EnemyMovement : MonoBehaviour
     public float GetSpeed()
     {
         return _speed;
-    }
-
-    int GetRandomValueInt(params RandomSelection[] selections)
-    {
-        float rand = Random.value;
-        float currentProb = 0;
-        foreach (var selection in selections)
-        {
-            currentProb += selection.probability;
-            if (rand <= currentProb) return selection.GetValueInt();
-        }
-
-        //will happen if the input's probabilities sums to less than 1
-        //throw error here if that's appropriate
-        return -1;
-    }
-
-    float GetRandomValueFloat(params RandomSelection[] selections)
-    {
-        float rand = Random.value;
-        float currentProb = 0;
-        foreach (var selection in selections)
-        {
-            currentProb += selection.probability;
-            if (rand <= currentProb) return selection.GetValueFloat();
-        }
-
-        //will happen if the input's probabilities sums to less than 1
-        //throw error here if that's appropriate
-        return -1;
     }
 
     public void Move()

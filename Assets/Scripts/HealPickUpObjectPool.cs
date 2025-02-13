@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PowerUpObjectPool : ObjectPool
+public class HealPickUpObjectPool : ObjectPool
 {
     override public void ResetMechanic()
     {
@@ -11,7 +11,7 @@ public class PowerUpObjectPool : ObjectPool
             if (obj.activeSelf && obj.transform.position.y < screenBottom)
             {
                 ResetObjectPosition(obj);
-                obj.SetActive(false);
+                obj.SetActive(false); 
             }
         }
     }

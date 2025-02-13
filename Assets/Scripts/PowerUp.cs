@@ -22,20 +22,6 @@ public class PowerUp : MonoBehaviour {
         {
             allVisuals[i].SetActive(true);
         }
-        //switch (_type)
-        //{
-        //    case PowerUpType.FIRE_RATE:
-        //        allVisuals[0].SetActive(true);
-        //        break;
-
-        //    case PowerUpType.TRIPLE_ROCKET:
-        //        allVisuals[1].SetActive(true);
-        //        break;
-        //    case PowerUpType.PROTECTIVE_FIELD:
-        //        allVisuals[2].SetActive(true);
-        //        break;
-        //    default: break;
-        //}
     }
 
 
@@ -45,9 +31,7 @@ public class PowerUp : MonoBehaviour {
     }
 
     private void Update() {
-        var p = transform.position;
-        p += Vector3.down * (_speed * Time.deltaTime);
-        transform.position = p;
+        transform.position += Vector3.down * (_speed * Time.deltaTime);
     }
 
     private void OnTriggerEnter(Collider other) {
@@ -56,7 +40,11 @@ public class PowerUp : MonoBehaviour {
         if (player == null) return;
 
         player.AddPowerUp(_type);
-        Destroy(gameObject);
+        GameController.Instance.pool.PowerUp.Despawn(gameObject); //When the power-up hits the player, it despawns as lik acquiring it
+    }
 
+    private void OnDisable()
+    {
+        foreach (Transform child in transform) child.gameObject.SetActive(false);
     }
 }

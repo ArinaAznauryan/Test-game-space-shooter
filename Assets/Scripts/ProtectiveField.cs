@@ -17,29 +17,28 @@ public class ProtectiveField : MonoBehaviour
     {
         transform.parent = GetPlayer().transform;
         transform.localPosition = Vector3.zero;
-        GetPlayer().SetFireDamage(20);
+        GetPlayer().SetFireDamage(20); //The protective field kills all the enemies touching it
         GetPlayer().MakeVulnerable(false);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Enemy")) // Check if it's an enemy
+        if (other.CompareTag("Enemy"))
         {
-            other.GetComponent<Enemy>().Die(); // Kill the enemy
+            other.GetComponent<Enemy>().Die(); //Kill the enemy
         }
     }
 
     private void LateUpdate()
     {
-        transform.rotation = new Quaternion(transform.rotation.x, transform.rotation.y, 0f, transform.rotation.w);
+        transform.rotation = new Quaternion(transform.rotation.x, transform.rotation.y, 0f, transform.rotation.w); //Freeze its rotation across Z axis
     }
 
     private void Deactivate()
     {
-        //GetPlayer().ResetDamage();
-        transform.parent = null;
+        transform.parent = null; //Reset its parent for more maintainability
         gameObject.SetActive(false);
-        GetPlayer().MakeVulnerable(true);
+        GetPlayer().MakeVulnerable(true); //Make the player vulnerable again when the protective field is gone
     }
 
     private Player GetPlayer() {

@@ -1,34 +1,10 @@
 using System;
 using System.Linq;
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
-
-struct RandomSelection
-{
-    private float minValue,  maxValue;
-    public float probability;
-
-    public RandomSelection(int minValue, int maxValue, float probability)
-    {
-        this.minValue = (float)minValue;
-        this.maxValue = (float)maxValue;
-        this.probability = probability;
-        this.probability = probability;
-    }
-
-    public RandomSelection(float minValue, float maxValue, float probability)
-    {
-        this.minValue = minValue;
-        this.maxValue = maxValue;
-        this.probability = probability;
-    }
-
-    public int GetValueInt() { return Random.Range((int)minValue, (int)maxValue + 1); }
-    public float GetValueFloat() { return Random.Range(minValue, maxValue + 1f); }
-
-}
-
 
 
 public enum EnemyMovementType
@@ -40,12 +16,10 @@ public enum EnemyMovementType
 public class Enemy : MonoBehaviour {
 
     [SerializeField] private GameObject _prefabExplosion;
-    [SerializeField] private PowerUp _prefabPowerUp;
-    [SerializeField] private Projectile _prefabProjectile;
 
-    private EnemyMovement movement;
+    private EnemyMovement movement; //This is a separate component that needs to be on the enemy's gameobject, it controls its movement entirely
 
-    private float _powerUpSpawnChance = 0.1f;
+    private float _powerUpSpawnChance = 0.25f;
     private int _health = 2;
     private Rigidbody _body;
 
@@ -75,7 +49,7 @@ public class Enemy : MonoBehaviour {
 
     private void InitMovement()
     {
-        GetComponent<EnemyMovement>().enabled = false;
+        GetComponent<EnemyMovement>().enabled = false; //Resetting the EnemyMovement properties
         GetComponent<EnemyMovement>().enabled = true;
         movement = GetComponent<EnemyMovement>();
     }
@@ -86,7 +60,6 @@ public class Enemy : MonoBehaviour {
 
             if (Time.time >= _fireTimer + _fireInterval)
             {
-                Debug.Log("Fire an enemy projectile!");
                 FireProjectile();
                 _fireTimer = Time.time;
             }
@@ -97,23 +70,27 @@ public class Enemy : MonoBehaviour {
     
     private void FireProjectile()
     {
+        StartCoroutine(ShootAnimation()); //Playing enemy shooting animation (Animation component required on the enemy)
         var go = GameController.Instance.pool.EnemyProjectile.Spawn();
         go.transform.position = transform.position;
-        go.GetComponent<Projectile>().Init(1, movement.GetSpeed());
+        go.GetComponent<EnemyProjectile>().Init(movement.GetSpeed());
     }
 
     private void FixedUpdate() {
         movement.Move();
     }
 
+    private IEnumerator ShootAnimation()
+    {
+        GetComponent<Animation>().enabled = true;
+        yield return new WaitForSeconds(50f/60f);
+        GetComponent<Animation>().enabled = false;
+    }
 
     public void Hit(int damage) {
         _health -= damage;
 
         if (_health <= 0) {
-
-            //var fx = GameController.Instance.pool.EnemyProjectile.Spawn();
-            //fx.transform.position = transform.position;
 
             if (Random.value < _powerUpSpawnChance) SpawnPowerUp();
 
@@ -122,22 +99,22 @@ public class Enemy : MonoBehaviour {
         }
     }
 
-    public void Die(/*GameObject fx*/)
+    public void Die()
     {
         _gameplayUI.AddScore(1);
 
         Instantiate(_prefabExplosion, transform.position, Quaternion.identity);
-        //GameController.Instance.pool.EnemyProjectile.Despawn(fx);
         GameController.Instance.pool.Enemy.Despawn(gameObject);
     }
 
     private void SpawnPowerUp()
     {
-        var powerUp = Instantiate(_prefabPowerUp);
-        powerUp.transform.position = new Vector3(Random.Range(-4f, 4f), 14f, 0.0f);
+        var powerUp = GameController.Instance.pool.PowerUp.Spawn();
+        powerUp.transform.position = new Vector3(Random.Range(-4f, 4f), 14f, 0.0f); //Spawns a power up randomly on the X axis
 
+        //Chooses a random type of the power-up
         var randomType = (PowerUp.PowerUpType)Random.Range(0, Enum.GetValues(typeof(PowerUp.PowerUpType)).Length);
-        powerUp.SetType(randomType);
+        powerUp.GetComponent<PowerUp>().SetType(randomType);
     }
 
 }

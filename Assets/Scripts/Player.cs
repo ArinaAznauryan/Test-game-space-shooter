@@ -2,15 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using PrimeTween;
+using PrimeTweenDemo;
+using static MyTools.Tools;
 
-
-//public enum PlayerState {DEFAULT, TRIPLE_ROCKET, DOUBLE_SHOOT, BOMB_SHOOT, PROTECTIVE_FIELD}
 
 public class Player : MonoBehaviour {
 
     public event System.Action OnDie;
 
-    public GameObject tripleRocket;
+    public GameObject tripleRocket; //Prefab of tripleRocket version of the player
+
+    private bool canFire = true; //If the player can fire projectiles
     
     [SerializeField] private GameObject _prefabExplosion;
     [SerializeField] private Projectile _prefabProjectile;
@@ -18,9 +21,6 @@ public class Player : MonoBehaviour {
 
     private int _health = 3;
 
-    private float powerUpInterval = 5f;
-    //public PlayerState state = PlayerState.DEFAULT;
-    
     private Rigidbody _body = null;
     
     private Vector2 _lastInput;
@@ -33,33 +33,38 @@ public class Player : MonoBehaviour {
     private float velocity = 0f;
     private float angle = 0f;
 
+    // Player accelerated movement properties
     private float acceleration;
     private float previousSpeed;
-    public float rotationForce = 5f;
-    public float maxAngle = 30f;
-    public float returnSpeed = 2f;
-    public float velocityMultiplier = 10f;
-    public float floatSpeed = 1f;
-    public float floatHeight = 1f;
+    private float rotationForce = 30f;
+    private float maxAngle = 60f;
+    private float returnSpeed = 10f;
+    private float velocityMultiplier = 20f;
+    private float floatSpeed = 5f;
+    private float floatHeight = .2f;
+    // Player accelerated movement properties
 
     public int _fireDamage = 1;
 
     private GameplayUi _gameplayUI;
     private GameOverUi _gameOverUI;
 
-    private bool vulnerable = true;
+    private bool vulnerable = true; //If the player can get hit by enemies
 
     protected virtual void OnEnable()
     {
         ResetDamage();
         UpdateHealth(3);
+
+        //During player version switching (default or triple rocket),
+        //checks for the power-ups that were still active on the recent active player and puts them on the swithced player
         CheckForPowerUps();
     }
 
     protected virtual void OnDisable()
     {
-        Invoke(nameof(AdjustForPowerUps), 0.01f);
-        
+        //Putting active power-ups on the switching verion of the player during disabling the current one
+        Invoke(nameof(AdjustForPowerUps), 0.01f); 
     }
 
     public void MakeVulnerable(bool yesOrNo)
@@ -69,6 +74,7 @@ public class Player : MonoBehaviour {
 
     protected void CheckForPowerUps()
     {
+        //The only power-up that has to get manually moved
         FindObjectOfType<ProtectiveField>()?.AdjustToPlayer();
     }
 
@@ -83,6 +89,8 @@ public class Player : MonoBehaviour {
         _gameplayUI = Object.FindObjectOfType<GameplayUi>(true);
         _gameOverUI = Object.FindObjectOfType<GameOverUi>(true);
         tripleRocket = FindObjectOfType<PlayerTripleRocket>(true).gameObject;
+
+        UpdateHealth(3);
     }
 
     void Start() {
@@ -114,12 +122,13 @@ public class Player : MonoBehaviour {
 
     protected virtual void FireProjectile()
     {
-       
-        var go = GameController.Instance.pool.PlayerProjectile.Spawn();
-       
-        go.transform.position = _projectileSpawnLocation.position;
+        if (!canFire) return;
 
-        go.GetComponent<Projectile>().Init(_fireDamage, 5);
+        var go = GameController.Instance.pool.PlayerProjectile.Spawn(); //Spawning(pooling) a player projectile
+       
+        go.transform.position = _projectileSpawnLocation.position; //Alligning its position to the player's
+
+        go.GetComponent<Projectile>().Init(5, _fireDamage); //Initializing its speed and damage it can cause to enemies
     }
 
 
@@ -130,7 +139,7 @@ public class Player : MonoBehaviour {
 
     public void Reset()
     {
-        FindObjectOfType<ProtectiveField>(true).transform.parent = null;
+        FindObjectOfType<ProtectiveField>(true).transform.parent = null; //Resetting the complicated power-up
         ResetDamage();
         UpdateHealth(3);
     }
@@ -139,20 +148,75 @@ public class Player : MonoBehaviour {
     protected virtual void Update() {
 
         AssignInput();
-        StartFire();
+        if (canFire) StartFire();
     }
 
-    public void Hit() {
+    public void Hit(float damage) {
         if (!vulnerable) return;
 
-        UpdateHealth(_health-1);
+        UpdateHealth(_health - (int)damage);
 
-        if (_health <= 0) Die();
+
+        if (_health <= 0)
+        {
+            Die();
+            return;
+        }
+
+        PlayHit();
+    }
+
+    private void PlayHit()
+    {
+        //This tween will hit the player to the down direction and shake it
+        var punchDir = -transform.up;
+
+        Tween.PunchLocalPosition(transform, strength: punchDir, duration: .7f, frequency: 5f);
+        StartCoroutine(HandlePlayerHit());
+    }
+
+    private IEnumerator HandlePlayerHit()
+    {
+        canFire = false;
+        ColliderOn(false); //So during the player's disactiveness, it doesn't accidentally trigger power ups or enemies
+
+        Instantiate(_prefabExplosion, transform.position, Quaternion.identity); //Explode
+        
+        // Flash effect: make the player scale down a bit to simulate the hit
+        Tween.Scale(transform, endValue: 0f, duration: .5f);
+
+        // Make the player disappear (alpha = 0)
+        GetComponentInChildren<Renderer>().material.SetFloat("_Transparency", 0);
+
+        // Wait for 2 seconds (Player stays invisible)
+        GameController.Instance.StartCountdown();
+        yield return new WaitForSeconds(3f);
+
+        // Make the player reappear
+        Tween.Scale(transform, endValue: 1f, duration: 1);
+        GetComponentInChildren<Renderer>().material.SetFloat("_Transparency", 1); // Reset transparency
+
+        transform.position = new Vector3(0f, 0f, 0f); // Set to initial posiGtion or wherever I want
+        yield return new WaitForSeconds(0f);
+
+        canFire = true;
+        ColliderOn(true);
+    }
+
+    private void ColliderOn(bool onOrOff)
+    {
+        GetComponent<Collider>().enabled = onOrOff;
     }
 
     protected void UpdateHealth(int health)
     {
         _health = health;
+        _gameplayUI.UpdateHealth(_health);
+    }
+    public void AddHealth()
+    {
+        if (_health >= 3) return; //Be able to add health only when it's lower than 3
+        _health++;
         _gameplayUI.UpdateHealth(_health);
     }
 
@@ -163,6 +227,8 @@ public class Player : MonoBehaviour {
         OnDie?.Invoke();
     }
 
+
+    //For better movement look
     private void FloatInSpace() {
         angle = Mathf.Lerp(angle, 0, Time.fixedDeltaTime * returnSpeed);
         float yPos = Mathf.Sin(Time.time * floatSpeed) * floatHeight;
@@ -199,7 +265,7 @@ public class Player : MonoBehaviour {
     }
 
     private void FixedUpdate() {
-        if (!_hasInput) FloatInSpace();
+        if (!_hasInput) FloatInSpace(); //If the player is still (idle), it will float in space
 
         else MovePlayer();
 
@@ -211,7 +277,7 @@ public class Player : MonoBehaviour {
         if (GetComponent<PlayerTripleRocket>()) return;
         tripleRocket.SetActive(true);
         tripleRocket.transform.position = transform.position;
-        gameObject.SetActive(false);
+        gameObject.SetActive(false); //Disables the default player and enabled the triple rocket player verison
     }
 
     void ActivateProtectiveField()
@@ -221,13 +287,8 @@ public class Player : MonoBehaviour {
 
     void SwitchState(PowerUp.PowerUpType newState)
     {
-       // state = newState;
         switch (newState)
         {
-            //case PlayerState.DEFAULT:
-            //    gameObject.SetActive(false);
-            //    GameController.Instance.player.gameObject.SetActive(true);
-            //    break;
             case PowerUp.PowerUpType.TRIPLE_ROCKET:
                 TurnIntoTripleRocket();
                 break;

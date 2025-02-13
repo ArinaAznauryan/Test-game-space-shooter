@@ -6,7 +6,7 @@ public class Explosion : MonoBehaviour
 {
     void OnEnable()
     {
-        Invoke(nameof(Disappear), 2f);
+        Invoke(nameof(Disappear), 2f); //The explosion disappear after 2 seconds
     }
 
     private void Disappear()
